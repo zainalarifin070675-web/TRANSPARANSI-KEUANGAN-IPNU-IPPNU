@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transparansi Kas - PK Mahad Aly</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; -webkit-tap-highlight-color: transparent; }
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .tab-content.active { display: block; opacity: 1; }
+        .glass-btn { background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards; opacity: 0; }
+        @media print {
+            body { background: white; padding: 0; display: block; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            #tab-laporan { display: block !important; padding: 0; margin-top: 10px; opacity: 1; }
+            .max-w-md { max-width: 100%; border: none; box-shadow: none; height: auto; }
+            .print-card { border: 1px solid #e5e7eb; box-shadow: none !important; margin-bottom: 12px; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex justify-center selection:bg-emerald-200">
+
+    <div class="w-full max-w-md bg-gray-50/50 h-screen flex flex-col relative overflow-hidden shadow-2xl md:border-x border-gray-200 print-wrapper">
+        
+        <!-- HEADER -->
+        <div class="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-800 px-6 pt-10 pb-28 rounded-b-[2.5rem] text-white flex-shrink-0 relative z-10 no-print shadow-lg">
+            <div class="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-xl"></div>
+            
+            <div class="flex justify-between items-center mb-6 relative z-10">
+                <div>
+                    <h2 class="font-bold text-lg tracking-wide">Transparansi Kas</h2>
+                    <p class="text-xs text-emerald-100 opacity-90">PK IPNU-IPPNU Mahad Aly</p>
+                </div>
+                <!-- Tombol Pusat Informasi -->
+                <div class="w-10 h-10 glass-btn rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:bg-white/30 transition-all duration-300" onclick="switchTab('profil')">
+                    <i class="fas fa-shield-alt text-sm"></i>
+                </div>
+            </div>
+
+            <div class="text-center mb-8 relative z-10">
+                <p class="text-emerald-100 text-xs font-semibold tracking-wider uppercase mb-1">Total Saldo Kas Bersama</p>
+                <h1 class="text-4xl font-extrabold tracking-tight drop-shadow-md" id="statSaldo">Rp 0</h1>
+            </div>
+
+            <div class="flex justify-around px-2 relative z-10">
+                <div class="flex flex-col items-center gap-2 group">
+                    <button onclick="setFilterKas('Masuk')" class="w-14 h-14 glass-btn rounded-2xl flex items-center justify-center group-hover:-translate-y-1 transition-all"><i class="fas fa-arrow-down text-lg drop-shadow"></i></button>
+                    <span class="text-[10px] font-semibold text-emerald-50 tracking-wide">Pemasukan</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 group">
+                    <button onclick="setFilterKas('Keluar')" class="w-14 h-14 glass-btn rounded-2xl flex items-center justify-center group-hover:-translate-y-1 transition-all"><i class="fas fa-arrow-up text-lg drop-shadow"></i></button>
+                    <span class="text-[10px] font-semibold text-emerald-50 tracking-wide">Pengeluaran</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 group">
+                    <button onclick="muatData()" class="w-14 h-14 glass-btn rounded-2xl flex items-center justify-center group-hover:-translate-y-1 transition-all active:scale-90"><i class="fas fa-sync-alt text-lg drop-shadow"></i></button>
+                    <span class="text-[10px] font-semibold text-emerald-50 tracking-wide">Refresh Data</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- KONTEN UTAMA -->
+        <div class="bg-gray-50 flex-grow -mt-10 rounded-t-[2.5rem] relative z-20 overflow-y-auto pb-28 h-full shadow-[0_-8px_20px_rgba(0,0,0,0.05)]">
+            
+            <!-- TAB BERANDA -->
+            <div id="tab-home" class="tab-content active px-6 pt-8 no-print">
+                <h3 class="text-lg font-extrabold text-gray-800 tracking-tight mb-6">Riwayat Kas Utama</h3>
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <button onclick="setFilterKas('Semua')" class="filter-pill active px-5 py-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-md transition-all">Semua</button>
+                    <button onclick="setFilterKas('Masuk')" class="filter-pill px-5 py-2 rounded-full text-xs font-bold bg-white text-gray-500 border hover:bg-gray-50 transition-all">Pemasukan</button>
+                    <button onclick="setFilterKas('Keluar')" class="filter-pill px-5 py-2 rounded-full text-xs font-bold bg-white text-gray-500 border hover:bg-gray-50 transition-all">Pengeluaran</button>
+                </div>
+                <div id="listKas" class="flex flex-col gap-3"></div>
+            </div>
+
+            <!-- TAB IURAN -->
+            <div id="tab-iuran" class="tab-content px-6 pt-8 no-print">
+                <h3 class="text-lg font-extrabold text-gray-800 tracking-tight mb-6">Buku Iuran Bulanan</h3>
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <button onclick="setFilterIuran('Semua')" class="filter-pill-iuran active px-5 py-2 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-md transition-all">Semua</button>
+                    <button onclick="setFilterIuran('IPNU')" class="filter-pill-iuran px-5 py-2 rounded-full text-xs font-bold bg-white text-gray-500 border hover:bg-gray-50 transition-all">IPNU</button>
+                    <button onclick="setFilterIuran('IPPNU')" class="filter-pill-iuran px-5 py-2 rounded-full text-xs font-bold bg-white text-gray-500 border hover:bg-gray-50 transition-all">IPPNU</button>
+                </div>
+                <div id="listIuran" class="flex flex-col gap-3"></div>
+            </div>
+
+            <!-- TAB JAS -->
+            <div id="tab-jas" class="tab-content px-6 pt-8 no-print">
+                <h3 class="text-lg font-extrabold text-gray-800 tracking-tight mb-6">Program Jas Organisasi</h3>
+                
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-3xl p-5 mb-6 text-white shadow-lg relative overflow-hidden animate-fade-in-up">
+                    <i class="fas fa-user-tie absolute -right-4 -bottom-4 text-7xl opacity-20 transform rotate-12"></i>
+                    <p class="text-xs font-semibold text-blue-100 uppercase tracking-wider mb-1">Total Dana Jas Terkumpul</p>
+                    <h2 class="text-3xl font-black drop-shadow-md" id="statSaldoJas">Rp 0</h2>
+                </div>
+
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <button onclick="setFilterJasMenu('IPNU')" class="filter-pill-jas active px-5 py-2 rounded-full text-xs font-bold bg-blue-500 text-white shadow-md transition-all whitespace-nowrap">Pesanan IPNU</button>
+                    <button onclick="setFilterJasMenu('IPPNU')" class="filter-pill-jas px-5 py-2 rounded-full text-xs font-bold bg-white text-gray-500 border hover:bg-gray-50 transition-all whitespace-nowrap">Pesanan IPPNU</button>
+                    <button onclick="setFilterJasMenu('Transaksi')" class="filter-pill-jas px-5 py-2 rounded-full text-xs font-bold bg-white text-gray-500 border hover:bg-gray-50 transition-all whitespace-nowrap">Riwayat Transaksi Jas</button>
+                </div>
+                <div id="listJasContent" class="flex flex-col gap-3"></div>
+            </div>
+
+            <!-- TAB LAPORAN -->
+            <div id="tab-laporan" class="tab-content px-6 pt-8">
+                <div class="print-only hidden text-center mb-6 border-b-2 border-black pb-4">
+                    <h2 class="text-xl font-bold uppercase">Laporan Kas Utama</h2>
+                    <h3 class="text-base font-semibold uppercase">PK IPNU - IPPNU Mahad Aly</h3>
+                </div>
+
+                <h3 class="text-lg font-extrabold text-gray-800 tracking-tight mb-4 no-print">Laporan Kas Bersama</h3>
+                
+                <div class="bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-4 print-card animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <h4 class="text-xs font-extrabold text-emerald-600 uppercase tracking-widest mb-4"><i class="fas fa-arrow-down mr-2"></i>Pemasukan Rutin</h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between border-b border-gray-50 pb-2"><span class="text-gray-500 text-sm font-medium">Iuran IPNU</span><span class="font-bold text-gray-800 text-sm" id="lapIPNU">Rp 0</span></div>
+                        <div class="flex justify-between border-b border-gray-50 pb-2"><span class="text-gray-500 text-sm font-medium">Iuran IPPNU</span><span class="font-bold text-gray-800 text-sm" id="lapIPPNU">Rp 0</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500 text-sm font-medium">Donatur / Lainnya</span><span class="font-bold text-gray-800 text-sm" id="lapDonatur">Rp 0</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-4 print-card animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <h4 class="text-xs font-extrabold text-red-500 uppercase tracking-widest mb-4"><i class="fas fa-arrow-up mr-2"></i>Pengeluaran Rutin</h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between border-b border-gray-50 pb-2"><span class="text-gray-500 text-sm font-medium">Operasional (ATK/Snack)</span><span class="font-bold text-gray-800 text-sm" id="lapOperasional">Rp 0</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500 text-sm font-medium">Kegiatan (Acara)</span><span class="font-bold text-gray-800 text-sm" id="lapKegiatan">Rp 0</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-3xl shadow-xl mb-6 text-white print-card animate-fade-in-up" style="animation-delay: 0.3s;">
+                    <h4 class="text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-4"><i class="fas fa-calculator mr-2"></i>Rekap Kas Utama</h4>
+                    <div class="flex justify-between mb-2"><span class="text-gray-300 text-sm">Total Masuk</span><span class="font-bold text-emerald-400 text-sm" id="lapMasuk">Rp 0</span></div>
+                    <div class="flex justify-between mb-4"><span class="text-gray-300 text-sm">Total Keluar</span><span class="font-bold text-red-400 text-sm" id="lapKeluar">Rp 0</span></div>
+                    <div class="border-t border-gray-700 pt-4 flex justify-between items-center"><span class="text-gray-100 font-extrabold uppercase text-sm tracking-wide">Saldo Akhir</span><span class="font-extrabold text-white text-2xl" id="lapSaldo">Rp 0</span></div>
+                </div>
+
+                <button onclick="window.print()" class="no-print w-full bg-emerald-50 text-emerald-700 p-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-100 shadow-sm transition animate-fade-in-up" style="animation-delay: 0.4s;">
+                    <i class="fas fa-file-pdf"></i> Cetak Laporan (PDF)
+                </button>
+            </div>
+
+            <!-- TAB INFO ORGANISASI -->
+            <div id="tab-profil" class="tab-content px-6 pt-8 no-print">
+                <h3 class="text-lg font-extrabold text-gray-800 tracking-tight mb-6">Pusat Informasi</h3>
+                
+                <div class="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center animate-fade-in-up relative overflow-hidden mb-6">
+                    <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                    <div class="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center text-emerald-500 text-4xl border-4 border-white shadow-lg relative z-10 mt-6">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-gray-800 mt-4">Transparansi Keuangan</h2>
+                    <p class="text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-1.5 rounded-full mt-2 inline-block tracking-wide">Portal Anggota PK IPNU-IPPNU</p>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-2xl animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="flex gap-3 text-amber-800">
+                        <i class="fas fa-info-circle text-xl mt-0.5"></i>
+                        <p class="text-xs font-medium leading-relaxed">
+                            Aplikasi ini disediakan khusus untuk seluruh anggota demi menjaga transparansi dana. Aplikasi ini bersifat <strong>hanya-baca (Read-Only)</strong>. Jika terdapat ketidaksesuaian pencatatan, silakan hubungi Bendahara Komisariat.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGASI BAWAH (4 ITEM DIBAGI RATA W-1/4, TANPA TOMBOL PLUS) -->
+        <div class="fixed bottom-0 w-full max-w-md bg-white/90 backdrop-blur-lg border-t border-gray-100 flex justify-between items-center px-2 py-3 pb-safe z-40 rounded-t-3xl shadow-[0_-10px_25px_rgba(0,0,0,0.05)] no-print">
+            <button onclick="switchTab('home')" class="nav-btn active flex flex-col items-center p-2 w-1/4 text-emerald-600 transition" id="nav-home">
+                <i class="fas fa-wallet text-xl mb-1.5"></i><span class="text-[10px] font-bold">Beranda</span>
+            </button>
+            <button onclick="switchTab('iuran')" class="nav-btn flex flex-col items-center p-2 w-1/4 text-gray-400 transition" id="nav-iuran">
+                <i class="fas fa-users text-xl mb-1.5"></i><span class="text-[10px] font-bold">Iuran</span>
+            </button>
+            <button onclick="switchTab('jas')" class="nav-btn flex flex-col items-center p-2 w-1/4 text-gray-400 transition" id="nav-jas">
+                <i class="fas fa-user-tie text-xl mb-1.5"></i><span class="text-[10px] font-bold">Program Jas</span>
+            </button>
+            <button onclick="switchTab('laporan')" class="nav-btn flex flex-col items-center p-2 w-1/4 text-gray-400 transition" id="nav-laporan">
+                <i class="fas fa-chart-pie text-xl mb-1.5"></i><span class="text-[10px] font-bold">Laporan</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // === JANGAN LUPA URL APPS SCRIPT DI SINI ===
+        const scriptURL = 'https://script.google.com/macros/s/AKfycby5Ugzfo1MZ9tLNiih65CVuBYftaaQG4r7q7I_Hw1h_jvE6-vPiVOrcvrBUhhDmT4Ca1Q/exec'; 
+
+        let rawDataCache = null;
+        let filterAktif = 'Semua';
+        let filterIuranAktif = 'Semua';
+        let filterJasAktif = 'IPNU';
+
+        function formatRupiah(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka); }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(el => { 
+                el.classList.remove('text-emerald-600'); el.classList.add('text-gray-400'); 
+            });
+            const activeNav = document.getElementById('nav-' + tabName);
+            if(activeNav) {
+                activeNav.classList.add('text-emerald-600'); activeNav.classList.remove('text-gray-400');
+            }
+        }
+
+        function muatData() {
+            document.getElementById('listKas').innerHTML = '<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-emerald-500 text-3xl"></i></div>';
+            fetch(scriptURL)
+                .then(res => res.json())
+                .then(data => {
+                    rawDataCache = data;
+                    document.getElementById('statSaldo').innerText = formatRupiah(data.stats.saldo);
+                    document.getElementById('lapIPNU').innerText = formatRupiah(data.stats.iuranIPNU);
+                    document.getElementById('lapIPPNU').innerText = formatRupiah(data.stats.iuranIPPNU);
+                    document.getElementById('lapDonatur').innerText = formatRupiah(data.stats.donatur);
+                    document.getElementById('lapOperasional').innerText = formatRupiah(data.stats.operasional);
+                    document.getElementById('lapKegiatan').innerText = formatRupiah(data.stats.kegiatan);
+                    document.getElementById('lapMasuk').innerText = formatRupiah(data.stats.masuk);
+                    document.getElementById('lapKeluar').innerText = formatRupiah(data.stats.keluar);
+                    document.getElementById('lapSaldo').innerText = formatRupiah(data.stats.saldo);
+                    
+                    document.getElementById('statSaldoJas').innerText = formatRupiah(data.stats.saldoJas);
+
+                    renderListKas(data.dataKas, filterAktif);
+                    renderListIuran(data.dataIuran, filterIuranAktif);
+                    setFilterJasMenu(filterJasAktif);
+                });
+        }
+
+        function setFilterKas(tipe) {
+            filterAktif = tipe;
+            const tabs = document.querySelectorAll('.filter-pill');
+            tabs.forEach(tab => { tab.classList.remove('bg-emerald-500', 'text-white'); tab.classList.add('bg-white', 'text-gray-500'); });
+            const activeTab = Array.from(tabs).find(t => t.innerText.includes(tipe));
+            if(activeTab) { activeTab.classList.remove('bg-white', 'text-gray-500'); activeTab.classList.add('bg-emerald-500', 'text-white'); }
+            if(rawDataCache) renderListKas(rawDataCache.dataKas, tipe);
+        }
+
+        function setFilterIuran(tipe) {
+            filterIuranAktif = tipe;
+            const tabs = document.querySelectorAll('.filter-pill-iuran');
+            tabs.forEach(tab => { tab.classList.remove('bg-emerald-500', 'text-white'); tab.classList.add('bg-white', 'text-gray-500'); });
+            const activeTab = Array.from(tabs).find(t => t.innerText.includes(tipe));
+            if(activeTab) { activeTab.classList.remove('bg-white', 'text-gray-500'); activeTab.classList.add('bg-emerald-500', 'text-white'); }
+            if(rawDataCache) renderListIuran(rawDataCache.dataIuran, tipe);
+        }
+
+        function setFilterJasMenu(tipe) {
+            filterJasAktif = tipe;
+            const tabs = document.querySelectorAll('.filter-pill-jas');
+            tabs.forEach(tab => { tab.classList.remove('bg-blue-500', 'text-white'); tab.classList.add('bg-white', 'text-gray-500'); });
+            const activeTab = Array.from(tabs).find(t => t.innerText.includes(tipe));
+            if(activeTab) { activeTab.classList.remove('bg-white', 'text-gray-500'); activeTab.classList.add('bg-blue-500', 'text-white'); }
+            
+            if(!rawDataCache) return;
+            if(tipe === 'Transaksi') { renderRiwayatJas(rawDataCache.dataKasJas); } 
+            else { renderListPesananJas(rawDataCache.dataPesananJas, tipe); }
+        }
+
+        // === FUNGSI RENDER TAMPILAN READ-ONLY (Tanpa Tombol Aksi) ===
+        function renderListKas(dataKas, filter) {
+            const wadah = document.getElementById('listKas');
+            wadah.innerHTML = ''; 
+            const filtered = dataKas.filter(row => filter === 'Semua' || row[3] === filter);
+            if(filtered.length === 0) { wadah.innerHTML = '<div class="text-center text-gray-400 py-10 text-sm font-medium border-2 border-dashed border-gray-200 rounded-3xl">Belum ada transaksi</div>'; return; }
+            
+            filtered.forEach((row, index) => {
+                let isMasuk = row[3] === 'Masuk';
+                let katText = String(row[2]);
+                let ikonKhusus = isMasuk ? 'fa-arrow-down' : 'fa-arrow-up';
+                let warnaIkon = isMasuk ? 'text-emerald-500 bg-emerald-50' : 'text-rose-500 bg-rose-50';
+                
+                if(katText.includes('Jas')) { ikonKhusus = 'fa-user-tie'; warnaIkon = 'text-blue-500 bg-blue-50'; }
+                else if(katText.includes('Donatur')) { ikonKhusus = 'fa-heart'; warnaIkon = 'text-purple-500 bg-purple-50'; }
+                else if(!isMasuk && katText.includes('Operasional')) { ikonKhusus = 'fa-store'; warnaIkon = 'text-amber-500 bg-amber-50'; }
+                
+                let delay = index * 0.05;
+                
+                wadah.innerHTML += `
+                <div class="flex items-center justify-between bg-white p-4 rounded-[1.25rem] shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-gray-100 mb-2 animate-fade-in-up" style="animation-delay: ${delay}s;">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-2xl flex items-center justify-center ${warnaIkon}"><i class="fas ${ikonKhusus} text-lg"></i></div>
+                        <div>
+                            <p class="font-extrabold text-gray-800 text-sm mb-0.5 line-clamp-1">${row[1]}</p>
+                            <p class="text-[9px] text-gray-400 uppercase font-extrabold tracking-wider">${row[2]}</p>
+                        </div>
+                    </div>
+                    <p class="font-black ${isMasuk ? 'text-emerald-500' : 'text-gray-800'} text-sm whitespace-nowrap">${isMasuk ? '+' : '-'} ${formatRupiah(row[4]).replace('Rp', '')}</p>
+                </div>`;
+            });
+        }
+
+        function renderListIuran(dataIuran, filter) {
+            const wadah = document.getElementById('listIuran');
+            wadah.innerHTML = ''; 
+            const filtered = dataIuran.filter(row => filter === 'Semua' || String(row[4]||'').toUpperCase() === filter.toUpperCase());
+
+            if(filtered.length === 0) { 
+                wadah.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-medium border-2 border-dashed border-gray-200 rounded-3xl">Data iuran ${filter !== 'Semua' ? filter : ''} kosong</div>`; 
+                return; 
+            }
+
+            filtered.forEach((row, index) => {
+                const [idIuran, nama, bulan, status, org] = row;
+                let orgLabel = org ? org : 'Anggota';
+                let warnaOrg = orgLabel.toUpperCase() === 'IPNU' ? 'text-emerald-500 bg-emerald-50' : 'text-amber-500 bg-amber-50';
+                
+                // MENGGANTI TULISAN MENJADI "BELUM"
+                let badgeStatus = status === 'Lunas' 
+                    ? `<span class="bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-[10px] font-extrabold shadow-sm"><i class="fas fa-check mr-1"></i> LUNAS</span>`
+                    : `<span class="bg-gray-100 text-gray-500 px-3 py-1.5 rounded-xl text-[10px] font-extrabold"><i class="fas fa-clock mr-1"></i> BELUM</span>`;
+
+                let delay = index * 0.05;
+
+                wadah.innerHTML += `
+                <div class="bg-white p-4 rounded-[1.25rem] shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-gray-100 flex items-center justify-between mb-2 animate-fade-in-up" style="animation-delay: ${delay}s;">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400"><i class="fas fa-user"></i></div>
+                        <div>
+                            <p class="font-extrabold text-gray-800 text-sm">${nama} <span class="text-[9px] ${warnaOrg} px-1.5 py-0.5 rounded-md ml-1 tracking-widest">${orgLabel}</span></p>
+                            <p class="text-[10px] font-semibold text-gray-400 mt-0.5">${bulan}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">${badgeStatus}</div>
+                </div>`;
+            });
+        }
+
+        function renderListPesananJas(dataJas, orgFilter) {
+            const wadah = document.getElementById('listJasContent');
+            wadah.innerHTML = '';
+            const filtered = dataJas.filter(r => String(r[2]||'').toUpperCase() === orgFilter.toUpperCase());
+            if(filtered.length === 0) { 
+                wadah.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-medium border-2 border-dashed border-gray-200 rounded-3xl">Belum ada pesanan ${orgFilter}</div>`; 
+                return; 
+            }
+            
+            filtered.forEach((row, idx) => {
+                // MENGGANTI TULISAN MENJADI "BELUM"
+                let badge = row[4] === 'Lunas' 
+                    ? '<span class="bg-blue-500 text-white px-3 py-1.5 rounded-xl text-[10px] font-extrabold shadow-sm"><i class="fas fa-check mr-1"></i> LUNAS</span>' 
+                    : '<span class="bg-gray-100 text-gray-500 px-3 py-1.5 rounded-xl text-[10px] font-extrabold"><i class="fas fa-clock mr-1"></i> BELUM</span>';
+                
+                wadah.innerHTML += `<div class="bg-white p-4 rounded-[1.25rem] shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-gray-100 mb-2 flex justify-between items-center animate-fade-in-up" style="animation-delay:${idx*0.05}s">
+                    <div class="flex gap-3.5 items-center">
+                        <div class="w-11 h-11 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center"><i class="fas fa-tshirt"></i></div>
+                        <div>
+                            <p class="font-extrabold text-sm text-gray-800">${row[1]} <span class="bg-gray-800 text-white text-[9px] px-1.5 py-0.5 rounded ml-1 font-bold">Size ${row[3]}</span></p>
+                            <p class="text-[10px] font-semibold text-gray-400 mt-0.5">Pesanan ${row[2]}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">${badge}</div></div>`;
+            });
+        }
+
+        function renderRiwayatJas(dataKasJas) {
+            const wadah = document.getElementById('listJasContent');
+            wadah.innerHTML = '';
+            if(dataKasJas.length === 0) { wadah.innerHTML = '<div class="text-center text-gray-400 py-10 text-sm font-medium border-2 border-dashed border-gray-200 rounded-3xl">Belum ada transaksi Jas</div>'; return; }
+            
+            dataKasJas.forEach((row, idx) => {
+                let isMasuk = row[3] === 'Masuk';
+                let icon = isMasuk ? 'fa-arrow-down text-blue-500 bg-blue-50' : 'fa-arrow-up text-rose-500 bg-rose-50';
+                wadah.innerHTML += `<div class="flex justify-between items-center bg-white p-4 rounded-[1.25rem] shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-gray-100 mb-2 animate-fade-in-up" style="animation-delay:${idx*0.05}s">
+                    <div class="flex gap-3.5 items-center">
+                        <div class="w-11 h-11 rounded-2xl flex items-center justify-center ${icon}"><i class="fas ${icon.split(' ')[0]} text-lg"></i></div>
+                        <div>
+                            <p class="font-extrabold text-sm text-gray-800">${row[1]}</p>
+                            <p class="text-[9px] text-gray-400 uppercase font-extrabold tracking-wider">${row[2]}</p>
+                        </div>
+                    </div>
+                    <p class="font-black ${isMasuk ? 'text-blue-500':'text-gray-800'} text-sm whitespace-nowrap">${isMasuk?'+':'-'} ${formatRupiah(row[4]).replace('Rp','')}</p>
+                </div>`;
+            });
+        }
+
+        muatData();
+    </script>
+</body>
+</html>
